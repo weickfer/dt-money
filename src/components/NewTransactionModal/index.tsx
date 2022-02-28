@@ -4,17 +4,21 @@ import ReactModal, { Props as ReactModalProps } from "react-modal";
 import closeImg from '../../assets/close.svg'
 import incomeImg from '../../assets/income.svg'
 import outcomeImg from '../../assets/outcome.svg'
-import { api } from '../../services/api';
+import { useTransactions } from '../../hooks/useTransactions';
 
 import { Container, TransactionTypeContainer, RadioBox } from "./styles";
 
 ReactModal.setAppElement('#root')
 
-interface NewTransactionModalProps extends ReactModalProps { }
+interface NewTransactionModalProps extends ReactModalProps {
+  onRequestClose(): void
+}
 
 type TransactionType = 'deposit' | 'withdraw'
 
 export function NewTransactionModal(props: NewTransactionModalProps) {
+  const { createTransaction } = useTransactions()
+
   const [type, setType] = useState<TransactionType>('deposit')
   const [title, setTitle] = useState('')
   const [amount, setAmount] = useState(0)
@@ -24,14 +28,19 @@ export function NewTransactionModal(props: NewTransactionModalProps) {
   const handleCreateNewTransaction = async (e: FormEvent) => {
     e.preventDefault()
 
-    const data = {
+    await createTransaction({
       type,
       title,
       amount,
       category
-    }
+    })
 
-    await api.post('/transactions', data)
+    setTitle('')
+    setAmount(0)
+    setCategory('')
+    setType('deposit')
+
+    props?.onRequestClose()
   }
 
   return (
